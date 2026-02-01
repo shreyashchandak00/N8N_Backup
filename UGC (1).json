@@ -1,0 +1,1016 @@
+{
+  "name": "UGC",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "UGC Machine",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Image",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".jpg, .png, .jpeg",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Format",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Horizontal (16:9) -e.g. Movies"
+                  },
+                  {
+                    "option": "Horizontal (9:16) -e.g. Reels, Shorts"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "How many UGC's?",
+              "fieldType": "number",
+              "placeholder": "3"
+            },
+            {
+              "fieldLabel": "Dialog",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Auto-Generated"
+                  },
+                  {
+                    "option": "Custom"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -848,
+        -48
+      ],
+      "id": "75a05f41-00fe-46fb-9325-12e1e30b41b0",
+      "name": "UGC Form",
+      "webhookId": "88cc2860-77b7-4634-9520-1150674f7272"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -32
+      ],
+      "id": "36795d7d-1128-4333-ae03-5ea13e5d6000",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "66qjPtTJfQx9lFJt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"product_name\": \"Coca Cola Can\",\n\t\"product_image_description\": \"You can see a coca cola can in blue\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -64
+      ],
+      "id": "cbec87d6-5d3a-4f3a-ae5d-c14adc40640d",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -48
+      ],
+      "id": "7b7ea9f7-3720-4427-b522-121aa4232a41",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "66qjPtTJfQx9lFJt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  {\n    \"id\": 1,\n    \"first_frame\": \"Close-up of a young woman (random model) holding the Wasabi Knives Fixed Angle Sharpener towards the camera with a natural smile. Bright, clean kitchen background.\",\n    \"prompt\": \"Model explains how the sharpener works in 10 seconds, showing how to place the knife and demonstrating one smooth sharpening stroke.\",\n    \"dialog\": \"This sharpener fixes your knife’s angle automatically. Just place it in, slide once, and you’re done!\",\n    \"ugc_creator\": \"Male, 28\"\n  },\n  {\n    \"id\": 2,\n    \"first_frame\": \"Mid-shot of a random male model holding the sharpener casually in one hand and a dull knife in the other. Neutral, homey background.\",\n    \"prompt\": \"Model complains briefly about how dull their knife is, then uses the sharpener, showing a before-and-after cut through a tomato to highlight sharpness.\",\n    \"dialog\": \"Ugh, my knife can’t even cut this tomato. Watch this… one swipe… wow, razor-sharp again!\",\n    \"ugc_creator\": \"Female, 18\"\n  },\n  {\n    \"id\": 3,\n    \"first_frame\": \"Overhead shot of a random model placing the sharpener on a wooden kitchen counter with both hands visible, product centered and well-lit.\",\n    \"prompt\": \"Model demonstrates how easy it is to set up and use the sharpener, adding a quick voice line like 'Takes less than 10 seconds!'\",\n    \"dialog\": \"Set it down, slide the knife, and you’re ready to go. Takes less than 10 seconds!\",\n    \"ugc_creator\": \"Female, 35\"\n  }\n]\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        -48
+      ],
+      "id": "adf2f940-0db6-4646-aa85-e7e256d5b42a",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Videos to create: {{ $('UGC Form').item.json['How many UGC\\'s?'] }}\n\nProduct: {{ $json.output.product_name }}\nProduct image description:\n\n{{ $json.output.product_image_description }}\n\n\nDialog type (Auto-Generated or Custom): {{ $('UGC Form').item.json.Dialog }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a UGC creative genius. Your job is to describe the first frame of a UGC video for {{ $json.output.product_name }}.\nAnother AI will use your description to generate the first frame. Follow these rules carefully:\n\n1. Random model selection:\n• Choose one random character from the list below for every clip and describe them naturally:\n\t1.\tYoung woman, early 20s, casual summer outfit, cheerful vibe\n\t2.\tYoung man, late 20s, hoodie and jeans, relaxed and friendly\n\t3.\tMiddle-aged woman, 40s, business casual, confident and warm\n\t4.\tMiddle-aged man, 40s, checked shirt, calm and trustworthy\n\t5.\tOlder woman, 60s, cozy sweater, nurturing and positive\n\t6.\tOlder man, 60s, polo shirt, energetic and enthusiastic\n\t7.\tAthletic woman, late 20s, sporty top, energetic and dynamic\n\t8.\tAthletic man, early 30s, fitted T-shirt, active and confident\n\t9.\tYoung woman, early 20s, trendy streetwear, cool and playful\n\t10.\tYoung man, late 20s, smart casual, charismatic and engaging\n• Also change one of the characteristics. E.g. \"Middle-aged man, 40s, checked shirt, calm and trustworthy\" to \"Middle-aged man, 30s, checked shirt, calm and trustworthy\" or \"Middle-aged man, 40s, polo shirt, calm and trustworthy\"\n\n2. First frame rules:\n• The whole person and the product must be fully visible.\n• Describe their pose, facial expression, and how they hold or present the product.\n• Include lighting, background, and camera angle to make the shot natural and UGC-friendly.\n• Keep descriptions short but vivid and cinematic.\n• Never write any script or dialogue — only describe the visual setup.\n• Make it detailed enough for another AI to understand what you want. Other AI will have access to the product image.\n\nOutput your response as only the description of the first frame. \n\n\n3. Dialog rules\n\nSince the entire scene lasts 8 seconds, the spoken dialog must:\n• Be max 7 seconds long to leave room for cuts.\n• Stay between 12–18 words or 65–90 characters for natural pacing.\n• Use casual, conversational language — no jargon or over-complication.\n• Focus on one clear idea or benefit per clip.\n• Keep energy high and tone authentic, like a real person talking to a friend.\n• You provide only a custom dialog when the dialog type is \"Auto-Generated\"\n• Make the dialog based on the product and description of the product image.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -272
+      ],
+      "id": "5e835049-76d5-48d7-bcb3-9110971e74cd",
+      "name": "UGC Director"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Give a description of this product image.",
+        "hasOutputParser": true,
+        "options": {
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -336,
+        -272
+      ],
+      "id": "be374f1b-9a5b-4da7-a052-44de78af167a",
+      "name": "Image Analyzer"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        -48
+      ],
+      "id": "f30234c8-8d71-4209-8f1d-a021aa1372d7",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 448,
+        "width": 528,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -336
+      ],
+      "id": "fca6813f-78fb-490e-bd8e-ca53e300fe2b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 448,
+        "width": 528,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -336
+      ],
+      "id": "4ff187a9-3f11-47a6-bf65-e74042f57aac",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tmpfiles.org/api/v1/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "Image"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -416,
+        192
+      ],
+      "id": "288a0675-3976-4a27-b60e-cc97cc1e2a84",
+      "name": "Upload File Temporary"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.url.replace('://tmpfiles.org/', '://tmpfiles.org/dl/') }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        192
+      ],
+      "id": "fa859f09-9754-4a08-bcc8-8d1577efcb5b",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "https://drive.google.com/drive/u/1/folders/1D79gi0r4aXzGjhYwhiMGQpabji07a4EL",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -32,
+        192
+      ],
+      "id": "94491dce-3d0d-4f1a-a327-811b1ce6b128",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "FZWp2jbmlMU2e4u4",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        832,
+        176
+      ],
+      "id": "8d7d46ff-fc0f-4ce6-9f1e-5175745f2a51",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 224,
+        "width": 1136,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        128
+      ],
+      "id": "1d3fc459-ea2e-49a9-8cc7-4657126f64aa",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        176
+      ],
+      "id": "37ab47e6-7c9a-42e1-986e-ce6f11d994fe",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/playground/createTask",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer de92be71af9a142a54cf07ec72db1b48"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/nano-banana-edit\",\n  \"input\": {\n    \"prompt\": \"{{ $json.first_frame }}; Format: {{ $('UGC Form').item.json.Format }}\",\n    \"image_urls\": [\n      \"{{ $('Upload File Temporary').item.json.data.url.replace('://tmpfiles.org/', '://tmpfiles.org/dl/') }}\"\n    ]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -768,
+        416
+      ],
+      "id": "05b09e32-693b-4d7d-919b-3e6fb6c77605",
+      "name": "Create Image"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/playground/recordInfo",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.data.taskId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer de92be71af9a142a54cf07ec72db1b48"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -560,
+        416
+      ],
+      "id": "09a81487-3c39-4102-8934-de0cc0110b03",
+      "name": "GET Image"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "204e3078-a736-48cc-be4f-574bdbd43cf9",
+                    "leftValue": "={{ $json.data.state }}",
+                    "rightValue": "fail",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "45b048e7-9488-476c-92a0-2bdf318923aa",
+                    "leftValue": "={{ $json.data.state }}",
+                    "rightValue": "success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ready"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6418b0ef-9fa1-4db2-8860-09d83e23bf3c",
+                    "leftValue": "generating, waiting",
+                    "rightValue": "={{ $json.data.state }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Processing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -368,
+        400
+      ],
+      "id": "837735e1-73af-4918-85c9-d41296cb79ef",
+      "name": "Switch"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        672
+      ],
+      "id": "3db5f4b7-f108-4094-9d21-6a806dfa23d7",
+      "name": "Wait",
+      "webhookId": "f8f68430-1506-4ca7-830e-c7eb6ead2d97"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kieai.erweima.ai/api/v1/veo/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer de92be71af9a142a54cf07ec72db1b48"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $('Split Out').item.json.prompt }}\nDialog: {{ $('Split Out').item.json.dialog }}"
+            },
+            {
+              "name": "model",
+              "value": "veo3_fast"
+            },
+            {
+              "name": "imageUrls",
+              "value": "={{ [JSON.parse($json.data.resultJson).resultUrls[0]] }}\n"
+            },
+            {
+              "name": "aspectRatio",
+              "value": "={{ (f => f.includes('vertical') ? '9:16' : f.includes('horizontal') ? '16:9' : '')(String($('UGC Form').item.json.Format || '').toLowerCase()) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        416
+      ],
+      "id": "29a290fe-f1e5-4507-9940-0a89dde9c0eb",
+      "name": "Create Video"
+    },
+    {
+      "parameters": {
+        "url": "https://kieai.erweima.ai/api/v1/veo/record-info",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.data.taskId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer de92be71af9a142a54cf07ec72db1b48"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        416
+      ],
+      "id": "fa222178-5c08-4a3a-bd1f-980a174e7bbc",
+      "name": "Get Video"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ac741548-526d-49ea-a1af-04b5aa8bf175",
+                    "leftValue": "={{ $('Create Video').item.json.code }}",
+                    "rightValue": 402,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No Enough Credits"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d2c6f3fa-4cd0-4277-aea6-3079cdba3dcd",
+                    "leftValue": "={{ $json.data.response }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ready"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "84678c89-b4d1-4f02-9606-ecf913452152",
+                    "leftValue": "={{ $json.data.response }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "processing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3a4d824e-655d-4172-8052-9faa9ed1e311",
+                    "leftValue": "={{ $json.data.errorCode }}",
+                    "rightValue": 300,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "error"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        752,
+        384
+      ],
+      "id": "47bd191a-976b-4d37-a3cd-f0c5c438af13",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        672
+      ],
+      "id": "f6c23bbb-efc1-4047-8e97-1f0ed7b2c873",
+      "name": "Wait1",
+      "webhookId": "de5d994f-0e96-4a96-9dd3-3a94f169bd35"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 480,
+        "width": 848,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        400
+      ],
+      "id": "644c0efe-b79b-436a-8aed-312968eb493b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 480,
+        "width": 848,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        400
+      ],
+      "id": "b7034c9b-56e3-4bca-9dc9-849e93d03044",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "url": "={{ JSON.parse($json.data.resultJson).resultUrls[0] }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -96,
+        416
+      ],
+      "id": "538cf479-4e7a-4fc0-a085-b721420c1c7d",
+      "name": "Download Created Image"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "UGC Form": {
+      "main": [
+        [
+          {
+            "node": "Image Analyzer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload File Temporary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Image Analyzer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Image Analyzer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "UGC Director",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "UGC Director",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Analyzer": {
+      "main": [
+        [
+          {
+            "node": "UGC Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "UGC Director",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload File Temporary": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "UGC Director": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Create Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Image": {
+      "main": [
+        [
+          {
+            "node": "GET Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Image": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download Created Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "GET Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Video": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Video": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [],
+        [],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Created Image": {
+      "main": [
+        [
+          {
+            "node": "Create Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "594f9ef7-6696-40cc-bce8-93d3792ab3e2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a901c368915da91f9d69615b320c3c8994ddbf1012de2943f6adcd318b9778b"
+  },
+  "id": "gKzQElNJI7ueKQVf",
+  "tags": []
+}

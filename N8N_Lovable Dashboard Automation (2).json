@@ -1,0 +1,340 @@
+{
+  "name": "N8N_Lovable Dashboard Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "=You are an AI Agent that manages client data from a connected Google Sheet and communicates via email. Your job is to process messages from the Lovable chatbot, analyze the intent, update the Google Sheet if needed, send emails, and return a human-readable response for the chatbot UI.\n\n## Your Capabilities\n- Read data using `read_google_sheet`\n- Update specific rows using `update_google_sheet`\n- Send email using `send_email`\n- Return a proper message to the user (e.g., via `Respond to Webhook` in n8n)\n\n## Core Workflow\n\n1. **Interpret** the user's message.\n2. **Read the Google Sheet** using `read_google_sheet`.\n3. **Identify** the client from the `Clients` column.\n4. **Take Action**:\n    - If the budget or any data is changed, call `update_google_sheet`\n    - If an email is requested, call `send_email` using the correct email from the `Email` column\n5. **Output** a confirmation message (see Response Format).\n\n## Important Notes\n- NEVER use the client's name as an email.\n- Lookup the `Email` from the `Clients` name in the sheet.\n- If name is not found, reply: “Couldn’t find [Client Name] in the sheet.”\n- All replies must be returned in **plain text**, suitable for chat response.\n- Output should be concise and friendly.\n\n## Response Format Examples\n\n- “Sent an email to Avinash Satav (keyujie281@lanipe.com) confirming his budget is now ₹12000.”\n- “Updated Dev Thakur’s budget to ₹15000 in the sheet.”\n- “Both updated the sheet and sent an email to Merlin Fernande (shre01@gmail.com).”\n- “Couldn’t find a client named 'Rahul Sharma' in the sheet.”\n\n## When No Action Is Taken\n- “I didn’t detect any update or email request in your message. Could you please clarify?”\n\n---\n\n### 🔁 Required Output\nAfter completing all actions, always return the **final summary response** as output. This will be displayed in the chatbot on the Lovable dashboard.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7260e78d-1b00-419a-8fef-54ef670c4cae",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "0437ecec-6ee0-4c27-b23e-637b372067b1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "66qjPtTJfQx9lFJt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1KS6kXmgRIT9bUC7l8o-6HAOZAwki0Ctk8c6uc5xRqUU",
+          "mode": "list",
+          "cachedResultName": "Prospects - Sheet1 (5)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KS6kXmgRIT9bUC7l8o-6HAOZAwki0Ctk8c6uc5xRqUU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1648433477,
+          "mode": "list",
+          "cachedResultName": "Prospects - Sheet1 (5).csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KS6kXmgRIT9bUC7l8o-6HAOZAwki0Ctk8c6uc5xRqUU/edit#gid=1648433477"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        224
+      ],
+      "id": "214a5180-bce2-4f7b-8dd7-38edae48d9b7",
+      "name": "Get Rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oYqG6uhB7Tep5ZFv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1KS6kXmgRIT9bUC7l8o-6HAOZAwki0Ctk8c6uc5xRqUU",
+          "mode": "list",
+          "cachedResultName": "Prospects - Sheet1 (5)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KS6kXmgRIT9bUC7l8o-6HAOZAwki0Ctk8c6uc5xRqUU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1648433477,
+          "mode": "list",
+          "cachedResultName": "Prospects - Sheet1 (5).csv",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KS6kXmgRIT9bUC7l8o-6HAOZAwki0Ctk8c6uc5xRqUU/edit#gid=1648433477"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Clients": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Clients__using_to_match_', ``, 'string') }}",
+            "No. of Headshots": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('No__of_Headshots', ``, 'string') }}",
+            "Price": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Price', ``, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "Clients"
+          ],
+          "schema": [
+            {
+              "id": "Clients",
+              "displayName": "Clients",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "No. of Headshots",
+              "displayName": "No. of Headshots",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price",
+              "displayName": "Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        224
+      ],
+      "id": "bd2c3ecd-d99f-429d-8c20-8a193f7df9df",
+      "name": "Update Rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oYqG6uhB7Tep5ZFv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sheetaccess",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "385d23bd-5462-42b1-b0ff-84c21ab7e40f",
+      "name": "Webhook",
+      "webhookId": "33f60f54-cf27-4f70-b530-ede310177dc5"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        768,
+        0
+      ],
+      "id": "592e5cd9-d6ce-40c3-bbc8-a12dad670681",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        672,
+        224
+      ],
+      "id": "650b6540-f925-4738-a0ec-8c57015df612",
+      "name": "Send a message in Gmail",
+      "webhookId": "493cd076-90c9-4f37-8dbd-36b3c49aa0cb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "v0kM7XjenkFWTIEq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7a296047-18f4-4630-a8dc-3e6cbbca7709",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "992c214d-7d16-4657-8ede-dca1f80524cc",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rows": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Rows": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ac5cde10-00bc-4dea-84f9-6d3bd5fb94ae",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a901c368915da91f9d69615b320c3c8994ddbf1012de2943f6adcd318b9778b"
+  },
+  "id": "sf9N9jetvXy0E6Bo",
+  "tags": []
+}

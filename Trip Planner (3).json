@@ -1,0 +1,275 @@
+{
+  "name": "Trip Planner",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "aaa6d182-e30d-490c-acd9-99db3f0bfd8b",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1104,
+        -80
+      ],
+      "webhookId": "auto-generated",
+      "credentials": {
+        "telegramApi": {
+          "id": "8u2k7RpwrYC3Ltiw",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c1cd1261-bb5b-4d16-8c44-7978bba9fa4e",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful and knowledgeable trip planner assistant...Your job is to help users plan their trips by suggesting itineraries, recommending places to visit, advising on accommodations, transportation options, dining, and activities tailored to their preferences and travel style.For each day give plan.  Do NOT use a single backslashes or hashtag or plus sign or minus or dash sign or any type of characer or sign or escape characters manually — the client code will handle escaping.\\n- Avoid raw Markdown syntax that breaks Telegram MarkdownV2.\\n\\nIn summary, provide clean, well-formatted text that can be sent directly to Telegram with minimal additional processing. While giving in bold dont use bold give in normal and dint use asterisk.Also for hotels and resturants provide google maps links. Give links in accessible format. \"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.sanitizedText }}\"\n    }\n  ],\n  \"max_tokens\": 500,\n  \"temperature\": 0.7\n}\n",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "4f8db09f-01ee-4d18-9234-be34dd63e05a",
+      "name": "Call Travel Planning API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -560,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "4680953d-8a94-48d5-8b90-717d8d53e5f0",
+      "name": "Send Travel Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        80
+      ],
+      "webhookId": "6771cbb7-dd95-4e4f-8cf7-c7a4bc917abb",
+      "credentials": {
+        "telegramApi": {
+          "id": "8u2k7RpwrYC3Ltiw",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "🤖 Hi! I'm your Travel Planning Assistant.\n\nI can help you with:\n✈️ Creating detailed travel itineraries\n🍽️ Finding great restaurants and dining options\n🗺️ Discovering attractions and activities\n📍 Getting travel information for any destination\n\nJust send me a message like:\n• \"Plan a 5-day trip to Tokyo for $2000\"\n• \"Find restaurants in Paris with good vegetarian options\"\n• \"What are the best attractions in Barcelona?\"\n\nHow can I help you plan your next adventure?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "f0108d6c-faf4-4ba0-a984-df7f99f28a4c",
+      "name": "Send Help Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -592,
+        -176
+      ],
+      "webhookId": "faf2cc18-b49c-4782-9a23-485ec0ac19b4",
+      "credentials": {
+        "telegramApi": {
+          "id": "8u2k7RpwrYC3Ltiw",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize multiple backslashes to a single backslash\nfunction normalizeBackslashes(text) {\n  if (!text) return text;\n  return text.replace(/\\\\+/g, '\\\\');\n}\n\n// Shorten sequences of 3 or more dashes to just 2 dashes\nfunction shortenDashes(text) {\n  if (!text) return text;\n  return text.replace(/-{3,}/g, '--');\n}\n\n// Escape Telegram MarkdownV2 special characters except inside URLs\n// Escape Telegram MarkdownV2 special characters except pipes and backslashes\nfunction escapeMarkdown(text) {\n  if (!text) return text;\n  return text\n    // Note: We DO NOT escape backslash and pipe here to keep tables intact\n    .replace(/_/g, '\\\\_')     // underscore\n    .replace(/\\*/g, '\\\\*')    // asterisk\n    .replace(/\\[/g, '\\\\[')    // open bracket\n    .replace(/\\]/g, '\\\\]')    // close bracket\n    .replace(/\\(/g, '\\\\(')    // open parenthesis\n    .replace(/\\)/g, '\\\\)')    // close parenthesis\n    .replace(/~/g, '\\\\~')     // tilde\n    .replace(/`/g, '\\\\`')     // backtick\n    .replace(/>/g, '\\\\>')     // greater than\n    .replace(/#/g, '\\\\#')     // hash\n    .replace(/\\+/g, '\\\\+')    // plus\n    .replace(/=/g, '\\\\=')     // equal\n    // .replace(/\\|/g, '\\\\|') // **Do NOT escape pipes**\n    .replace(/\\{/g, '\\\\{')    // open curly brace\n    .replace(/\\}/g, '\\\\}')    // close curly brace\n    .replace(/!/g, '\\\\!');    // exclamation\n}\n\n\n// Clean URLs by removing backslashes to avoid invalid markdown links\nfunction cleanUrl(url) {\n  if (!url) return url;\n  return url.replace(/\\\\/g, '');\n}\n\n// Compose the final Telegram message with bold titles and clickable links\nfunction formatMessage(aiContent, searchResults) {\n  if (!aiContent) return '';\n\n  // Normalize backslashes and shorten dashes only in aiContent\n  let text = normalizeBackslashes(aiContent);\n  text = shortenDashes(text);\n\n  // Escape markdown for main content only\n  text = escapeMarkdown(text) + '\\n\\n';\n\n  // Append search results without over-escaping URLs and markdown syntax\n  searchResults.forEach((result, i) => {\n    // Escape title and snippet only\n    const title = escapeMarkdown(result.title);\n    const snippet = escapeMarkdown(result.snippet);\n    // Clean url without escaping markdown syntax\n    const url = cleanUrl(result.url);\n\n    // Format with markdown - title bold, url as clickable link\n    text += `${i + 1}. *${title}*\\n[${url}](${url})\\n${snippet}\\n\\n`;\n  });\n\n  return text;\n}\n\n// Your JSON input\nconst aiContent = $json.choices?.[0]?.message?.content || '';\nconst results = $json.search_results || [];\n\n// Format the full message text, escaping properly\nconst finalMessage = formatMessage(aiContent, results);\n\n// Telegram has max message length of 4096 chars; split by line to avoid breaking entities\nfunction safeSplit(text, maxLength) {\n  const parts = [];\n  let currentPart = '';\n\n  text.split('\\n').forEach(line => {\n    if ((currentPart + '\\n' + line).length > maxLength) {\n      parts.push(currentPart);\n      currentPart = line;\n    } else {\n      currentPart += (currentPart.length ? '\\n' : '') + line;\n    }\n  });\n\n  if (currentPart.length) parts.push(currentPart);\n  return parts;\n}\n\nconst maxLength = 4096;\nconst parts = safeSplit(finalMessage, maxLength);\n\n// Return array of messages formatted for Telegram API\nreturn parts.map(part => ({\n  json: {\n    text: part,\n    chat_id: $json.chat_id || $('Telegram Trigger').item.json.message.chat.id,\n    parse_mode: 'MarkdownV2',\n  },\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        80
+      ],
+      "id": "122c6adc-b632-401a-b010-3cb82847e447",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4a5eb3d6-446d-4731-a0ea-1609e9158c87",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "^(h|hi|hello|hey|start)$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -944,
+        -80
+      ],
+      "id": "c00f7b2c-c7cc-473f-bf01-c0e22009192e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "function escapeMarkdown(text) {\n  if (!text) return text;\n  return text\n    .replace(/\\\\/g, '\\\\\\\\')   // escape backslash first\n    .replace(/\\*/g, '\\\\*')\n    .replace(/_/g, '\\\\_')\n    .replace(/\\[/g, '\\\\[')\n    .replace(/\\]/g, '\\\\]')\n    .replace(/\\(/g, '\\\\(')\n    .replace(/\\)/g, '\\\\)')\n    .replace(/~/g, '\\\\~')\n    .replace(/`/g, '\\\\`')     // escape backticks\n    .replace(/>/g, '\\\\>')\n    .replace(/#/g, '\\\\#')\n    .replace(/\\+/g, '\\\\+')\n    .replace(/=/g, '\\\\=')\n    .replace(/\\|/g, '\\\\|')\n    .replace(/\\{/g, '\\\\{')\n    .replace(/\\}/g, '\\\\}')\n    .replace(/!/g, '\\\\!');\n}\n\nconst userText = $json[\"message\"]?.text || '';\nconst sanitizedText = escapeMarkdown(userText);\n\nreturn [{ json: { sanitizedText } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        80
+      ],
+      "id": "ea256ee6-022d-4b19-a034-e6e498e9bdbb",
+      "name": "Code1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Travel Planning API": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Travel Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Help Message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send Travel Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send Help Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Call Travel Planning API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c6bbf8fc-b938-4faa-b143-059e8e536a81",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a901c368915da91f9d69615b320c3c8994ddbf1012de2943f6adcd318b9778b"
+  },
+  "id": "bCPE22BXa2F9xTNl",
+  "tags": []
+}

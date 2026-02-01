@@ -1,0 +1,129 @@
+{
+  "name": "Dental Clinic Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7d7ded8e-fbca-422c-a153-73919fa8387b",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2eea9a22-2d46-4ede-9875-4518cf16a884",
+      "name": "Webhook",
+      "webhookId": "7d7ded8e-fbca-422c-a153-73919fa8387b"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "9a6945df996d1a6dd2284c1aa357b9d495a8202fb389fee7a3a0f1dd793a1fa1@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "My doctor calendar"
+        },
+        "start": "={{ $json.body.message.toolCalls[0].function.arguments.date }}",
+        "end": "={{ $json.body.message.toolCalls[0].function.arguments.date.toDateTime().plus(30, \"Minutes\") }}",
+        "additionalFields": {
+          "description": "=Phone Number: {{ $json.body.message.toolCalls[0].function.arguments.Phone }}",
+          "summary": "={{ $json.body.message.toolCalls[0].function.arguments.name }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        0
+      ],
+      "id": "d7dd879e-8280-400f-8176-d3a66f2fb386",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "iKyfRx47XkIlkP6C",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n    \"results\":[\n        {\n            \"toolCallId\":\"{{ $('Webhook').item.json.body.message.toolCalls[0].id }}\",\n            \"result\": \"status is {{ $json.status }}\"\n        }\n    ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        656,
+        0
+      ],
+      "id": "58646da1-9049-4f0b-aa49-cd68afcb8658",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data with error handling\nconst inputData = $input.all();\n\n// Check if inputData exists and has items\nif (!inputData || inputData.length === 0) {\n  throw new Error(\"No input data received\");\n}\n\n// Extract function arguments from the correct path based on your data structure\nconst functionArgs = inputData[0]?.json?.toolCalls?.[0]?.function?.arguments || \n                    inputData[0]?.toolCalls?.[0]?.function?.arguments ||\n                    inputData[0]?.function?.arguments ||\n                    inputData[0]?.json || \n                    inputData[0];\n\nconst name = functionArgs?.name;\nconst phone = functionArgs?.Phone || functionArgs?.phone; // Handle both cases\nconst dob = functionArgs?.dob || functionArgs?.DOB || functionArgs?.dateOfBirth; // Handle variations\nconst date = functionArgs?.date || functionArgs?.appointmentDate; // Handle variations\n\nconsole.log(\"Raw functionArgs:\", JSON.stringify(functionArgs, null, 2));\nconsole.log(\"Name:\", JSON.stringify(name));\nconsole.log(\"Phone:\", JSON.stringify(phone));\nconsole.log(\"DOB:\", JSON.stringify(dob));\nconsole.log(\"Date:\", JSON.stringify(date));\nconsole.log(\"Name truthy check:\", !!name, \"length:\", name?.length);\nconsole.log(\"Phone truthy check:\", !!phone, \"length:\", phone?.length);\nconsole.log(\"Date truthy check:\", !!date, \"length:\", date?.length);\n\n// More robust validation - check for empty strings and whitespace\nconst isValidField = (field) => field && typeof field === 'string' && field.trim().length > 0;\n\nconst missingFields = [];\nif (!isValidField($input.first().json.body.message.toolCalls[0].function.arguments.name)) missingFields.push(\"name\");\nif (!isValidField($input.first().json.body.message.toolCalls[0].function.arguments.Phone)) missingFields.push(\"phone number\");\nif (!isValidField($input.first().json.body.message.toolCalls[0].function.arguments.dob)) missingFields.push(\"appointment dob\");\n// Only check for DOB if it's actually required for your use case\n// if (!isValidField(dob)) missingFields.push(\"date of birth\");\n\nif (missingFields.length > 0) {\n  throw new Error(`Missing required details: ${missingFields.join(\", \")}. Please provide all required information.`);\n}\n\n// Return the processed data\nreturn inputData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a7129530-414d-42a4-b3d5-b85361ca4e5b",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "d71c846d-da62-47e8-bfdf-17b1bd5b9674",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a901c368915da91f9d69615b320c3c8994ddbf1012de2943f6adcd318b9778b"
+  },
+  "id": "V7Nm28bfisH1L3rq",
+  "tags": []
+}

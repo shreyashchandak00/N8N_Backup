@@ -1,0 +1,122 @@
+{
+  "name": "Free AI image generator",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputs\": \"A high-resolution, photorealistic image in a 1:1 aspect ratio, capturing the 'before and after' of a complex data science project. The composition uses a subtle visual split. On the left side, a desk is slightly cluttered with scattered notes and an empty coffee mug. A laptop screen displays a chaotic, imbalanced bar chart with one massive bar and several tiny ones, under the heading 'Initial Model: 60% Accuracy.' Leaning against the desk is an old acoustic guitar with visibly rusty strings, symbolizing the initial struggle. The lighting here is dimmer, more focused, like a late-night work session. On the right side, the scene is clean and organized. The same laptop now shows a sleek, balanced bar chart and a sharp line graph trending steeply upwards, culminating at a glowing '92% Accuracy.' The mood is bright and accomplished, with soft, natural morning light. The overall aesthetic is modern, professional, and minimalist, with a color palette of cool blues, grays, and a single, warm accent color highlighting the successful outcome\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -416,
+        16
+      ],
+      "id": "fa5c39bb-716a-4aef-ac3e-2bfb8b6e78f8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "name": "=",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1tFbOxY1kz3URNHtQ9V8a5cZoenb8hvd5",
+          "mode": "list",
+          "cachedResultName": "Test Images",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1tFbOxY1kz3URNHtQ9V8a5cZoenb8hvd5"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -176,
+        16
+      ],
+      "id": "e86b9ecf-138b-4e07-b495-8d5462a61121",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "FZWp2jbmlMU2e4u4",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -688,
+        16
+      ],
+      "id": "ed9317f5-0950-46a4-ab19-e99d8b244e10",
+      "name": "When chat message received",
+      "webhookId": "bfea45f9-0ee6-4929-8f54-16899675ebc9"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1ba4f1d2-a54b-48d9-b834-2648fdccdd20",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a901c368915da91f9d69615b320c3c8994ddbf1012de2943f6adcd318b9778b"
+  },
+  "id": "gdj2AyXzGeiEe6T3",
+  "tags": []
+}
